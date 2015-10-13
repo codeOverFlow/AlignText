@@ -5,9 +5,9 @@ package com.codeoverflow.nlp
  */
 import java.io.File
 
-import scala.io.Source
-
 import com.codeoverflow.models._
+
+import scala.io.Source
 
 object TermsExtractor {
 
@@ -24,8 +24,14 @@ object TermsExtractor {
 
     fileContentByFile.keys.toList.map { fileName =>
       val matches = termRegex findAllIn fileContentByFile(fileName)
-
-      val terms = matches.map(_ => Term(matches group 1, matches group 3, matches group 2)).toList
+      val terms = matches.map(_ =>
+        /*if (matches group 3 contains ":") {
+          println(matches group 3)
+          Term(matches group 1, matches.group(3).split(":")(0), matches group 2)
+        }
+        else*/
+        Term(matches group 1, matches group 3, matches group 2)
+      ).toList
 
       FileTermer(fileName, terms)
     }

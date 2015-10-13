@@ -19,7 +19,11 @@ object Preprocessing {
     t.lemme.length > 4 && !tagsWeIgnore.exists(x => t.tag.startsWith(x))
   }
 
-  def isOccuredEnougth(tuple: Tuple2[String, List[Term]]) : Boolean = {
+  def isOccuredEnougth(tuple: (String, List[Term])): Boolean = {
     tuple._2.length > 5
+  }
+
+  def applyToFileTermer(s: List[Term]): List[Term] = {
+    s.filter(isItInteresting)
   }
 }
