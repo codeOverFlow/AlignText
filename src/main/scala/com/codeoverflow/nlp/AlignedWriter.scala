@@ -8,11 +8,11 @@ import com.codeoverflow.helpers.FileWriter
 
 object AlignedWriter {
 
-  def toCSVFormat(alignedData: List[Aligned]): String = {
-    alignedData.map(x => s"${x.w0};${x.w1}").mkString("\n")
+  def toCSVFormat(alignedData: List[Aligned], separator: String): String = {
+    alignedData.map(x => s"${x.w0}${separator}${x.w1}").mkString("\n")
   }
 
-  def writeToCsv(alignedData: List[Aligned], fileName: String = "result.csv") = {
-    FileWriter.write(fileName, toCSVFormat(alignedData))
+  def writeToCsv(alignedData: List[Aligned], fileName: String = "result.csv", separator: String = ";") = {
+    FileWriter.write(fileName, toCSVFormat(alignedData, separator))
   }
 }

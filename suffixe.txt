@@ -1,0 +1,127 @@
+# tableau contenant les variations morphologiques
+# pour chaque suffixe d'adjectif en premier champ, le tableau fournit
+# le suffixe de nom equivalent en deuxieme champ 
+
+@TMorphAdjRel = (
+#ique
+    ["ématique","ème"],
+    ["eutique","ie"], 		# EM le 09/05/08 : thérapeutique/thérapie
+    ["étrique","ètre"],
+    ["tifique","ce"],
+    ["otique","ose"],          	#hypnotique/hypnose
+    ["inique","en"],
+    ["atique","e"],         	# suffixe en "ique"
+    ["atique","a"],         
+    ["ytique","se"],         	#analytique/analyse
+    ["élique","ile"],
+    ["cique","x"],
+    ["tique","se"],		# EM le 09/05/08 : métastatique/métastase
+    ["tique",""], 
+    ["ique",""],
+    ["ique","ie"],
+    ["ique","e"],            	#dictionnaire/dictionnairique
+    ["ique","a"],
+    ["ique","i"],
+    ["ique","é"],
+    ["ique","as"],
+    ["ique","os"],          	#tétanique/tétanos
+    ["ique","ose"],          	#métamorphique/métamorphose
+    ["ique","us"],              #tonique/tonus
+    ["ique","icité"],
+    ["ique","isme"],
+#aire
+    ["ulmonaire","oumon"],  	#pulmonaire/poumon
+    ["ulaire","le"],        	# muscle/musculaire
+    ["étaire","ète"],
+    ["laire",""],           	# suffixe en "aire"
+    ["laire","e"],
+    ["iaire","e"],
+    ["naire",""],
+    ["naire","in"],
+    ["aire",""],
+    ["aire","e"],
+    ["aire","é"],         	#volontaire/volonté
+    ["aire","ation"],
+#al
+    ["oronal","ouronne"],
+    ["ndéral","ids"],     	#pondéral/poids
+    ["estial","ête"],
+    ["arial","aire"],   	# salaire/salarial  
+    ["dical","decine"],   	# médical/médecine 
+    ["ital","et"],          
+    ["inal","en"],
+    ["inal",""],   		# nominal/nom 
+    ["ical","ex"],
+    ["ocal","oix"],  
+    ["éral","ère"],		# EM le 15/05/08 : viscéral/viscère        
+    ["oral","eur"],     	#floral/fleur     
+    ["acal","e"],          
+    ["asal","ez"],          
+    ["yal","i"],
+    ["ial","e"],          	# province/provincial
+    ["cal","que"],
+    ["al","e"],
+    ["al",""],
+    ["al","um"],        	#rectal/rectum
+    ["al","us"],        	#viral/virus
+#eux
+    ["ateux","e"],		# EM le 13/05/08 : carcinomateux/carcinome 
+    ["teux",""],		# EM le 15/05/08 : comateux/coma 
+    ["éreux","er"],		# EM le 20/04/08 : cancéreux/cancer
+    ["oureux","eur"],          
+    ["uleux","le"],          
+    ["ileux","oil"],    	#pileux/poil
+    ["seux",""],        	# osseux/os
+    ["ieux","ion"],
+    ["ieux","e"],
+    ["eux","e"],
+    ["eux",""],
+#oire
+    ["oire","ion"],
+#é    
+    ["boré", "bre"],
+    ["iégé", "iège"],
+    ["ulé", "le"],
+    ["é","us"],           	#cactée/cactus
+    ["é", "e"],
+    ["é", "ure"],
+#cole
+    ["cole","culture"],
+#er
+    ["égulier", "ègle"],
+    ["estier", "êt"],       	#forêt/forestier
+    ["ier","e"],            	#bourse/boursier
+    ["ier",""],
+    ["er","e"],
+#ien
+    ["rien","ire"], 		# EM le 10/05/08 : ovarien/ovaire
+    ["érien","ir"], 		# EM le 20/04/08 : aérien/air
+    ["idien","is"],     	#rachidien/rachis
+    ["orien","oire"],
+    ["ien","e"], 		# EM le 15/05/08 : oesophagien/oesophage
+    ["ien","ie"],
+    ["ien","is"],       	#pubien/pubis
+    ["ien",""],          	#Balzac/balzacien
+#ain
+    ["orain","oire"],
+#el
+    ["iel","ie"],
+    ["el","ité"],   		#eternel/eternité
+    ["el","e"],			#culture/culturel
+    ["el",""],
+#in
+    ["arin","er"],
+    ["alin","el"],
+    ["guin","g"],
+    ["lin",""],
+    ["in","us"],               	#utérin/utérus
+    ["in",""],
+#if
+    ["ursif","ours"],
+    ["if",""],
+    ["if","ion"],
+#iaque
+    ["ardiaque","oeur"],	# EM le 10/05/08 : cardiaque/coeur
+#xillaire
+    ["xillaire","isselle"],	# EM le 15/05/08 : axillaire/aisselle
+    ) ; 

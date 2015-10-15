@@ -20,16 +20,16 @@ object TermsExtractor {
    */
   def rawTermerFileToHandyStruct(raw: File): List[FileTermer] = {
     val fileContentByFile = splitRawTermerFileContentByFile(Source.fromFile(raw).getLines().toList)
-    val termRegex = """([^\s/]+)/([^\s/]+)/([^\s/]+)""".r
+    val termRegex = """([^0-9\s/:()+]+)/([^0-9\s/()+]+)/([^0-9\s/:()+]+)""".r
 
     fileContentByFile.keys.toList.map { fileName =>
       val matches = termRegex findAllIn fileContentByFile(fileName)
       val terms = matches.map(_ =>
-        /*if (matches group 3 contains ":") {
+        if (matches group 3 contains ":") {
           println(matches group 3)
           Term(matches group 1, matches.group(3).split(":")(0), matches group 2)
         }
-        else*/
+        else
         Term(matches group 1, matches group 3, matches group 2)
       ).toList
 
