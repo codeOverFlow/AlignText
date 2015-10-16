@@ -3,7 +3,6 @@ package com.codeoverflow
 import java.io.File
 
 import com.codeoverflow.helpers._
-import com.codeoverflow.models.Term
 import com.codeoverflow.nlp._
 
 /**
@@ -53,26 +52,56 @@ object Main {
     */
 
     // Standard method
-    println("\nProcess Standard method...")
+    println("\nMethode standard...")
     println("Vecteurs de contexte...")
     val (srcMapContext, trgMapContext) = Timer.executionTime {
       StandardMethod.createVectors(sourcesTerms, targetTerms)
     }
 
-    println("Size map: " + srcMapContext.keys.toList.length)
+    println("\nSize map: " + srcMapContext.keys.toList.length)
     println("Context cancer: " + srcMapContext("cancer").length)
     println("Done.\n")
 
     FileWriter.write("context_fr.txt", srcMapContext.toString().replace(")),", ")),\n"))
 
     println("Traduction du vecteur...")
-    val srcTradMapContext = Timer.executionTime { StandardMethod.trad(srcMapContext, dict) }
-
-    FileWriter.write("context_trad_fr.txt", srcTradMapContext.toString())
-
-    println("Texte d'existance des mot a traduire...")
-    specializedDict.foreach {case (s, ts) =>
-      if (!srcTradMapContext.contains(s)) println(s)
+    val srcTradMapContext = Timer.executionTime {
+      StandardMethod.trad(srcMapContext, trgMapContext, dict)
     }
+
+    FileWriter.write("context_trad_fr.txt", srcTradMapContext.toString().replace(")),", ")),\n"))
+
+    println("\nReduction aux mot a traduire...")
+    val filteredContext = Timer.executionTime {
+      srcTradMapContext.filter { case (s, l) => specializedDict.contains(s) }
+    }
+
+    println("\nRecherche de candidat...")
+    val listOfCandidates = Timer.executionTime {
+      StandardMethod.lookForCandidates(filteredContext, trgMapContext)
+    }
+
+    FileWriter.write("candidates.txt", listOfCandidates.toString().replace(")),", ")),\n"))
+
+
+
+    println("\nCalcul de precision...")
+    var done = List[String]()
+    val accuracy = Timer.executionTime {
+      listOfCandidates.flatMap { case (key, value) =>
+        value.slice(0, 10).map { case (s, d) =>
+          if (!done.contains(key) && specializedDict(key).equalsIgnoreCase(s)) {
+            println(key + " <==" + specializedDict(key) + "==> " + s)
+            done = key :: done
+            1
+          }
+          else
+            0
+        }
+      }.foldLeft(0)(_ + _)
+    }
+
+    println("\nPrecision: " + accuracy)
+
   }
 }

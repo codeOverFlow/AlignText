@@ -12,8 +12,8 @@ object XMLTools {
    * @param file the file name to load
    * @return a pretty structure
    */
-  def loadXML(file: String): mutable.Map[String, (String, String, String)] = {
-    var myStruct = scala.collection.mutable.Map[String, (String, String, String)]()
+  def loadXML(file: String): mutable.Map[String, String] = {
+    var myStruct = scala.collection.mutable.Map[String, String]()
     val data = scala.xml.XML.loadFile(file)
     var last = ""
     (data \\ "TRAD").filter { e => (e \ "@valid").text == "yes" }.map { e =>
@@ -21,10 +21,10 @@ object XMLTools {
         val texte = (l \ "@type").text
         if (texte == "source") {
           last = (l \ "LEM").text
-          myStruct.put((l \ "LEM").text, ("", "", ""))
+          //myStruct.put((l \ "LEM").text, "")
         }
         else {
-          myStruct.put(last, ((l \ "TERM").text, (l \ "LEM").text, (l \ "BASE").text))
+          myStruct.put(last, (l \ "LEM").text)
         }
       }
     }

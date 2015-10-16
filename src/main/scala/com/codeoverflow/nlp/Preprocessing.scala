@@ -30,6 +30,12 @@ object Preprocessing {
   def applyToFileTermer(s: List[Term]): List[Term] = {
     val toolwords =  Source.fromFile(new File("toolwords.txt")).getLines().toList
     val stop =  Source.fromFile(new File("stop.txt")).getLines().toList
-    s.filter(isItInteresting).filter(t => !toolwords.contains(t.word)).filter(t => !stop.contains(t.word))
+    val enStop = Source.fromFile(new File("english_stop.txt")).getLines().toList
+    val enFunction = Source.fromFile(new File("english_function_words.txt")).getLines().toList.map(_.toLowerCase)
+    s.filter(isItInteresting)
+      .filter(t => !toolwords.contains(t.word) || !toolwords.contains(t.lemme))
+      .filter(t => !stop.contains(t.word) || !stop.contains(t.lemme))
+      .filter(t => !enStop.contains(t.word) || !enStop.contains(t.lemme))
+      .filter(t => !enFunction.contains(t.word) || !enFunction.contains(t.lemme))
   }
 }
