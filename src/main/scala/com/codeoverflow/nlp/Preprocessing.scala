@@ -1,7 +1,8 @@
 package com.codeoverflow.nlp
 
 /**
- * Created by codeoverflow on 03/10/15.
+ * Author: codeoverflow
+ * Date: 03/10/15
  */
 
 import java.io.File
@@ -20,7 +21,9 @@ object Preprocessing {
   }
 
   def isItInteresting(t: Term): Boolean = {
-    t.lemme.length > 2
+    t.lemme.length >= 4 && tagsWeWant.exists(x =>
+      t.tag.startsWith(x) && !tagsWeIgnore.exists(y => t.tag.startsWith(y))
+    )
   }
 
   def isOccuredEnougth(tuple: (String, List[Term])): Boolean = {
@@ -32,10 +35,14 @@ object Preprocessing {
     val stop =  Source.fromFile(new File("stop.txt")).getLines().toList
     val enStop = Source.fromFile(new File("english_stop.txt")).getLines().toList
     val enFunction = Source.fromFile(new File("english_function_words.txt")).getLines().toList.map(_.toLowerCase)
-    s.filter(isItInteresting)
+    s.filter(isItInteresting2)
       .filter(t => !toolwords.contains(t.word) || !toolwords.contains(t.lemme))
       .filter(t => !stop.contains(t.word) || !stop.contains(t.lemme))
       .filter(t => !enStop.contains(t.word) || !enStop.contains(t.lemme))
       .filter(t => !enFunction.contains(t.word) || !enFunction.contains(t.lemme))
+  }
+
+  def isItInteresting2(t: Term): Boolean = {
+    t.lemme.length > 2
   }
 }

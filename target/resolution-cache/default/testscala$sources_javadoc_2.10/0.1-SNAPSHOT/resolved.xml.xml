@@ -4,7 +4,7 @@
 		module="testscala$sources_javadoc_2.10"
 		revision="0.1-SNAPSHOT"
 		status="integration"
-		publication="20151003201850"
+		publication="20151016164611"
 	/>
 	<configurations>
 		<conf name="compile" visibility="public" description=""/>

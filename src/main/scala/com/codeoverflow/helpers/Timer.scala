@@ -1,7 +1,8 @@
 package com.codeoverflow.helpers
 
 /**
- * Created by codeoverflow on 03/10/15.
+ * Author: codeoverflow
+ * Date: 03/10/15
  */
 object Timer {
   def executionTime[A](f: => A): A = {
