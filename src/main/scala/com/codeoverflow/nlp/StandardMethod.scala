@@ -35,17 +35,19 @@ object StandardMethod {
   }*/
 
   def trad(context: mutable.Map[String, mutable.Map[String, Double]],
-           context_en: mutable.Map[String, mutable.Map[String, Double]],
            dict: Map[String, List[String]]): mutable.Map[String, List[(String, Double)]] = {
+    //val enTxt = Source.fromFile(new File("corpus/termer_target/corpus.lem")).getLines().mkString(" ")
     context.map { case (k, v) =>
       (k, v.filter(sd => dict.contains(sd._1)).flatMap { case (s, d) =>
+        //println("d = " + d)
         dict.getOrElse(s, List[String]()).map { str =>
-          var sum = 0.0
-          if (context_en.contains(str))
-            sum = context_en(str).foldLeft(0.0) { (acc, c0) => acc + c0._2 }
-          (str, (d / dict.getOrElse(s, List[String]("")).length.toDouble) /* * (sum / 6.0)*/ )
+          //val reg = ("""\s""" + str + """\/""").r
+          //val sum = (reg findAllIn enTxt).length.toDouble
+          //println(s + " = " + dict.getOrElse(s, List("")))
+          //println("d/dict(s).length.toDouble = " + d/dict(s).length.toDouble)
+          (str, (d / dict(s).length.toDouble) /* * sum*/ )
         }
-      }.toList.filter { case (s, d) => d > 0.0005 })
+      }.toList /*.filter { case (s, d) => d > 0.0005 }*/ )
     }.filter { case (s, l) => l.nonEmpty }
   }
 
@@ -62,12 +64,16 @@ object StandardMethod {
   }*/
     context.map { case (k, v) =>
       CandidateVector(k, context_en.map { case (kk, vv) =>
-        var up = 0.0
         var downLeft = 0.0
         var downRight = 0.0
-        for (i <- 0 to scala.math.min(v.length, vv.length) - 1) {
-          up += v(i)._2 * vv(i)._2
-        }
+        val up = v.flatMap { case (s, d) =>
+          vv.map { case (ss, dd) =>
+            if (s.equalsIgnoreCase(ss))
+              dd * dd
+            else
+              0.0
+          }
+        }.sum
         for (i <- 0 to v.length - 1) {
           downRight += v(i)._2
         }
@@ -80,6 +86,6 @@ object StandardMethod {
       }.toList)
     }.toList.groupBy(_.word).map { case (k, v) => (k, v.flatMap { c =>
       c.candidates.map { case (s, d) => (s, d) }
-    }.sortWith(_._2 < _._2).filterNot(x => x._2 == 0.0))
+    }.sortWith(_._2 > _._2))
     }
 }
