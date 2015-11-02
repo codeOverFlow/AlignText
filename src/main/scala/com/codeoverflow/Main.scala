@@ -1,8 +1,8 @@
 package com.codeoverflow
 
-import java.io.File
+import java.io._
 
-import com.codeoverflow.helpers._
+import com.codeoverflow.helpers.{FileWriter, _}
 import com.codeoverflow.nlp._
 
 /**
@@ -24,7 +24,10 @@ object Main {
     val sources = Timer.executionTime { TermsExtractor.rawTermerFileToHandyStruct(sourceTermsFile) }
     val targets = Timer.executionTime { TermsExtractor.rawTermerFileToHandyStruct(targetTermsFile) }
 
+    FileWriter.write("sources.txt", sources.head.toString.replace(")),", ")),\n"))
+
     println("Done.\n")
+
 
     // And here goes pre-processing!
     println("Pre-processing...")
@@ -32,6 +35,7 @@ object Main {
     val sourcesTerms = Timer.executionTime {
       sources.map( ft => Preprocessing.applyToFileTermer(ft.terms))
     }
+    FileWriter.write("sources_pre.txt", sourcesTerms.head.toString().replace(")),", ")),\n"))
     val sourcesTerms2 = Timer.executionTime {
       Preprocessing(sources)
     }
@@ -44,6 +48,18 @@ object Main {
     }
 
     println("Done.\n")
+
+    /*val trgOccurences = StandardMethod.countOccurences(targetTerms.flatten.flatten, Source.fromFile(targetTermsFile).getLines().mkString(" ").toLowerCase)
+    FileWriter.write("test_occurences.txt", trgOccurences.toString().replace(",", ",\n"))
+    println("Serialize it in files...")
+    val ocOut = new ObjectOutputStream(new FileOutputStream("trg_occ_save"))
+    ocOut.writeObject(trgOccurences)
+    ocOut.close()*/
+
+    println("Read it from files...")
+    val ocOut = new ObjectInputStream(new FileInputStream("trg_occ_save"))
+    val trgOccurences = ocOut.readObject().asInstanceOf[Map[String, Double]]
+
 
 
     /*println("Starting alignment...")
@@ -60,30 +76,11 @@ object Main {
     // Standard method
     println("\nMethode standard...")
     println("Vecteurs de contexte...")
+
     // creation des vecteurs
     val (srcMapContext, trgMapContext) = Timer.executionTime {
       (ContextVector.build(sourcesTerms, 3), ContextVector.build(targetTerms, 3))
     }
-    //val (srcMapContext, trgMapContext) = Timer.executionTime { StandardMethod.createVectors(sourcesTerms, targetTerms) }
-
-
-    // normalisation
-    /*val (contin_b_src, contin_b_trg)  =
-      Timer.executionTime { (StandardMethod.contingency_b(srcMapContext), StandardMethod.contingency_b(trgMapContext)) }*/
-
-    /*val (contin_c_src, contin_c_trg) =
-      Timer.executionTime { (StandardMethod.contingency_c(srcMapContext), StandardMethod.contingency_c(trgMapContext)) }
-
-    val (contin_d_src, contin_d_trg) =
-      Timer.executionTime { (StandardMethod.contingency_d(srcMapContext), StandardMethod.contingency_d(trgMapContext)) }*/
-
-    /*val (srcCleanedContext, trgCleanedContext) =
-      Timer.executionTime { (ContextVector.clean(srcMapContext), ContextVector.clean(trgMapContext)) }*/
-
-    /*val (srcNormalizedContext, trgNormalizedContext) =
-      Timer.executionTime { (ContextVector.normalize(srcMapContext, contin_b_src, contin_c_src, contin_d_src),
-        ContextVector.normalize(trgMapContext, contin_b_trg, contin_c_trg, contin_d_trg)) }*/
-
 
     println("Done.")
 
@@ -92,18 +89,58 @@ object Main {
     println("Done.\n")
 
     FileWriter.write("context_fr.txt", srcMapContext.toString().replace("),", "),\n"))
+    // serialize it
+    println("Serialize them in files...")
+    val srcOos = new ObjectOutputStream(new FileOutputStream("src_save"))
+    srcOos.writeObject(srcMapContext)
+    srcOos.close()
+    val trgOos = new ObjectOutputStream(new FileOutputStream("trg_save"))
+    trgOos.writeObject(trgMapContext)
+    trgOos.close()
+    println("Done.")
+
+
+
+    /*println("Read them from files...")
+    val srcOis = new ObjectInputStream(new FileInputStream("src_save"))
+    val trgOis = new ObjectInputStream(new FileInputStream("trg_save"))
+    val (srcMapContext, trgMapContext) = (srcOis.readObject().asInstanceOf[mutable.Map[String, mutable.Map[String, Double]]],
+      trgOis.readObject().asInstanceOf[mutable.Map[String, mutable.Map[String, Double]]])
+    srcOis.close()
+    trgOis.close()*/
+
 
     println("Traduction du vecteur...")
+    val reversedCognateDict = dictCognates.map { case (k, v) =>
+      v.map { s => (s, k) }
+    }.toList.flatten.groupBy(_._1).map { case (k, v) => (k, v.map(_._2)) }
+
+    FileWriter.write("dictCo.txt", dictCognates.toString().replace("),", "),\n"))
+    FileWriter.write("dictCo2.txt", reversedCognateDict.toString().replace("),", "),\n"))
+
     val srcTradMapContext = Timer.executionTime {
-      StandardMethod.trad(srcMapContext, trgMapContext, dict)
+      StandardMethod.trad(srcMapContext, dict, dictCognates, reversedCognateDict, trgOccurences)
     }
 
     FileWriter.write("context_trad_fr.txt", srcTradMapContext.toString().replace(")),", ")),\n"))
+
+    println("Serialize it in files...")
+    val srcOos2 = new ObjectOutputStream(new FileOutputStream("src_trad_save"))
+    srcOos2.writeObject(srcTradMapContext)
+    srcOos2.close()
+
+
+    /*println("Read it from files...")
+    val srcOis2 = new ObjectInputStream(new FileInputStream("src_trad_save"))
+    val srcTradMapContext = srcOis2.readObject().asInstanceOf[mutable.Map[String, List[(String, Double)]]]*/
+
 
     println("\nReduction aux mot a traduire...")
     val filteredContext = Timer.executionTime {
       srcTradMapContext.filter { case (s, l) => specializedDict.contains(s) }
     }
+
+    FileWriter.write("context_filtered_fr.txt", filteredContext.toString().replace(")),", ")),\n"))
 
     println("\nRecherche de candidat...")
     val listOfCandidates = Timer.executionTime {
@@ -113,12 +150,11 @@ object Main {
     FileWriter.write("candidates.txt", listOfCandidates.toString().replace(")),", ")),\n"))
 
 
-
     println("\nCalcul de precision...")
     var done = List[String]()
     val accuracy = Timer.executionTime {
       listOfCandidates.flatMap { case (key, value) =>
-        value /*.slice(0,10)*/ .map { case (s, d) =>
+        value.slice(0, 50).map { case (s, d) =>
           if (!done.contains(key) && specializedDict(key).exists(_.equalsIgnoreCase(s))) {
             println(key + " <==" + specializedDict(key).find(_.equalsIgnoreCase(s)) + "==> " + s)
             done = key :: done
@@ -131,6 +167,5 @@ object Main {
     }
 
     println("\nPrecision: " + accuracy)
-
   }
 }

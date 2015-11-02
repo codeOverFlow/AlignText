@@ -35,17 +35,15 @@ object ContextVector {
   def toMap(vectors: List[ContextVectorFrequency]): Map[String, List[(String, Double)]] =
     vectors.groupBy(_.word).map { case (k, v) => (k, v.flatMap(_.context)) }*/
 
-  def build(terms: List[List[Term]], size: Int): mutable.Map[String, mutable.Map[String, Double]] = {
-    // map of context for each keys k
+  def build(terms: List[List[List[Term]]], size: Int): mutable.Map[String, mutable.Map[String, Double]] = {
     var myMap = mutable.Map[String, mutable.Map[String, Double]]()
-    // give us all the ki which have K in their context
     var inversedMap = mutable.Map[String, List[String]]()
 
-    terms.foreach { t =>
-      val lemmeList = t.map(_.lemme)
+    terms.foreach(_.foreach { t =>
+      val lemmeList = t.map(_.lemme.toLowerCase)
       lemmeList.zipWithIndex.foreach { case (te, i) =>
         if (myMap.contains(te)) {
-          (t.slice(i - size, i) ++ t.slice(i + 1, i + size + 1)).map(_.lemme).foreach { x =>
+          (t.slice(i - size, i) ++ t.slice(i + 1, i + size + 1)).map(_.lemme.toLowerCase).foreach { x =>
             if (inversedMap.contains(x)) {
               if (!inversedMap(x).contains(te))
                 inversedMap(x) ++= List(te)
@@ -60,7 +58,7 @@ object ContextVector {
           }
         }
         else {
-          (t.slice(i - size, i) ++ t.slice(i + 1, i + size + 1)).map(_.lemme).foreach { x =>
+          (t.slice(i - size, i) ++ t.slice(i + 1, i + size + 1)).map(_.lemme.toLowerCase).foreach { x =>
             if (inversedMap.contains(x)) {
               if (!inversedMap(x).contains(te))
                 inversedMap(x) ++= List(te)
@@ -76,36 +74,36 @@ object ContextVector {
           }
         }
       }
-    }
+    })
 
+    println("Normalisation...")
+    var normalized = mutable.Map[String, mutable.Map[String, Double]]()
+    myMap.keys.toList.foreach { case s => normalized += (s -> mutable.Map[String, Double]()) }
     // all cooc
     val wStar = myMap.map { case (k, v) =>
       v.map(_._2).sum
     }.sum
-    println("Normalisation...")
     myMap.foreach { case (k, v) =>
-      val sumVect = v.map(_._2).sum
       v.foreach { case (kk, vv) =>
         if (vv == 1.0)
           v -= kk
         else {
-          // c(i,j) = size of the context of i
           val a = vv
-          // c(i, -j) = all words minus ones in i
+          val sumVect = v.map(_._2).sum
+          //println("v = " + v)
+          //println("sumVect: " + sumVect)
           val b = sumVect - a
-          // c(-i, j) = j in context of -i
-          val c = inversedMap(kk).filterNot(_.equalsIgnoreCase(k)).map { x =>
-            myMap(x).map(_._2).sum
-          }.sum
-          // c(-i,-j) = only in context of i
+          val c = inversedMap.getOrElse(kk, List()).filterNot(_.equalsIgnoreCase(k)).map { x => myMap.getOrElse(x, mutable.Map()).map(_._2).sum }.sum
           val d = wStar - a - b - c
-          myMap(k)(kk) = scala.math.abs(scala.math.log(((a + 0.5) * (d + 0.5)) / ((b + 0.5) * (c + 0.5))))
+          //println("a: " + a +" | b: " + b + " | c: " + c + " | d: " + d + "\n\n")
+          normalized(k) += (kk -> ((a + 0.5) * (d + 0.5)) / ((b + 0.5) * (c + 0.5)))
         }
       }
-      if (v.isEmpty)
-        myMap -= k
     }
 
-    myMap
+    println("Remove empty...")
+    normalized = normalized.filterNot(_._2.isEmpty)
+
+    normalized
   }
 }
