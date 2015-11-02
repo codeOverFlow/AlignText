@@ -1,5 +1,7 @@
 package com.codeoverflow.nlp
 
+import com.codeoverflow.models.Term
+
 import scala.collection.mutable
 
 /**
@@ -11,57 +13,41 @@ case class CandidateVector(word: String, candidates: List[(String, Double)])
 
 
 object StandardMethod {
-  /*def createVectors(sourcesTerms: List[List[Term]],
-                    targetTerms: List[List[Term]]): (Map[String, List[(String, Double)]], Map[String, List[(String, Double)]]) =
-    (ContextVector.toMap(ContextVector.addFrequencies(sourcesTerms.map(ContextVector.build(_, 3)).flatten)),
-      ContextVector.toMap(ContextVector.addFrequencies(targetTerms.map(ContextVector.build(_, 3)).flatten)))*/
-
-  //@todo inversed file
-  /*def inversedFile(context: Map[String, List[(String, Double)]]): Map[String, List[String]] = {
-    context.flatMap { case (k, v) =>
-      v.map { case (s, d) =>
-        (s, k)
+  def countOccurences(l: List[Term], s: String): Map[String, Double] = {
+    var done = List[String]()
+    l.map { t =>
+      if (!done.contains(t.lemme.toLowerCase)) {
+        val fileReferenceRegex = ("""\/""" + t.lemme.toLowerCase).r
+        done = t.lemme.toLowerCase :: done
+        (t.lemme.toLowerCase, fileReferenceRegex.findAllIn(s).length.toDouble)
       }
-    }.toList.groupBy(_._1).map { case (s, ss) => (s, ss.map(_._2)) }
-  }*/
-
-  /*def contingency_b(context: Map[String, List[(String, Double)]]): Map[(String, String), Double] = {
-    context.map { case (k, v) =>
-      //println(k + " -> " + v)
-      v.map { case (s, d) =>
-        ((k,s) , context.keys.toList.length.toDouble - context(k).length.toDouble)
+      else {
+        ("", 0.0)
       }
-    }.flatten.toMap[(String,String), Double]
-  }*/
+    }.toMap
+  }
 
   def trad(context: mutable.Map[String, mutable.Map[String, Double]],
-           dict: Map[String, List[String]]): mutable.Map[String, List[(String, Double)]] = {
+           dict: Map[String, List[String]],
+           cognates: Map[String, List[String]],
+           reversedCognates: Map[String, List[String]],
+           occurences: Map[String, Double]): mutable.Map[String, List[(String, Double)]] = {
     //val enTxt = Source.fromFile(new File("corpus/termer_target/corpus.lem")).getLines().mkString(" ")
     context.map { case (k, v) =>
-      (k, v.filter(sd => dict.contains(sd._1)).flatMap { case (s, d) =>
+      (k, v.filter(sd => dict.contains(sd._1) || cognates.contains(sd._1) || reversedCognates.contains(sd._1)).flatMap { case (s, d) =>
         //println("d = " + d)
-        dict.getOrElse(s, List[String]()).map { str =>
-          //val reg = ("""\s""" + str + """\/""").r
-          //val sum = (reg findAllIn enTxt).length.toDouble
-          //println(s + " = " + dict.getOrElse(s, List("")))
-          //println("d/dict(s).length.toDouble = " + d/dict(s).length.toDouble)
-          (str, (d / dict(s).length.toDouble) /* * sum*/ )
+        (dict.getOrElse(s.toLowerCase, List[String]()) ++ cognates.getOrElse(s.toLowerCase, List[String]()) ++ reversedCognates.getOrElse(s.toLowerCase, List[String]())).map { str =>
+          (str.toLowerCase,
+            (d / (dict.getOrElse(s.toLowerCase, List[String]()) ++ cognates.getOrElse(s.toLowerCase, List[String]()) ++ reversedCognates.getOrElse(s.toLowerCase, List[String]())).length.toDouble) *
+              occurences.getOrElse(str.toLowerCase, 0.0))
         }
-      }.toList /*.filter { case (s, d) => d > 0.0005 }*/ )
+      }.toList.filterNot { case (s, d) => d == 0.0 })
     }.filter { case (s, l) => l.nonEmpty }
   }
 
 
   def lookForCandidates(context: mutable.Map[String, List[(String, Double)]],
                         context_en: mutable.Map[String, List[(String, Double)]]): Map[String, List[(String, Double)]] =
-  /*context.map { case (k, v) =>
-    CandidateVector(k, context_en.map { case (kk, vv) =>
-      (kk, v.map(_._1).intersect(vv.map(_._1)).length.toDouble / v.union(vv).length.toDouble)
-    }.toList)
-  }.toList.groupBy(_.word).map { case (k, v) => (k, v.flatMap { c =>
-    c.candidates.map { case (s, d) => (s, d) }
-  }.sortWith(_._2 > _._2).filterNot(x => x._2 == 0.0))
-  }*/
     context.map { case (k, v) =>
       CandidateVector(k, context_en.map { case (kk, vv) =>
         var downLeft = 0.0
@@ -69,7 +55,7 @@ object StandardMethod {
         val up = v.flatMap { case (s, d) =>
           vv.map { case (ss, dd) =>
             if (s.equalsIgnoreCase(ss))
-              dd * dd
+              d * dd
             else
               0.0
           }
@@ -85,7 +71,7 @@ object StandardMethod {
         (kk, up / (downLeft * downRight))
       }.toList)
     }.toList.groupBy(_.word).map { case (k, v) => (k, v.flatMap { c =>
-      c.candidates.map { case (s, d) => (s, d) }
+      c.candidates.filterNot { case (s, d) => d == 0.0 }.map { case (s, d) => (s, d) }
     }.sortWith(_._2 > _._2))
     }
 }

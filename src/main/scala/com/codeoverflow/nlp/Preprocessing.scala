@@ -44,6 +44,6 @@ object Preprocessing {
   }
 
   def isItInteresting2(t: Term): Boolean = {
-    t.lemme.length > 2 && !tagsWeIgnore2.exists(y => t.tag.startsWith(y))
+    t.lemme.length > 2 // && !tagsWeIgnore2.exists(y => t.tag.startsWith(y))
   }
 }

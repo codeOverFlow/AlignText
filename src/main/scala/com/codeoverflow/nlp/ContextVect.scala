@@ -40,10 +40,10 @@ object ContextVector {
     var inversedMap = mutable.Map[String, List[String]]()
 
     terms.foreach(_.foreach { t =>
-      val lemmeList = t.map(_.lemme)
+      val lemmeList = t.map(_.lemme.toLowerCase)
       lemmeList.zipWithIndex.foreach { case (te, i) =>
         if (myMap.contains(te)) {
-          (t.slice(i - size, i) ++ t.slice(i + 1, i + size + 1)).map(_.lemme).foreach { x =>
+          (t.slice(i - size, i) ++ t.slice(i + 1, i + size + 1)).map(_.lemme.toLowerCase).foreach { x =>
             if (inversedMap.contains(x)) {
               if (!inversedMap(x).contains(te))
                 inversedMap(x) ++= List(te)
@@ -58,7 +58,7 @@ object ContextVector {
           }
         }
         else {
-          (t.slice(i - size, i) ++ t.slice(i + 1, i + size + 1)).map(_.lemme).foreach { x =>
+          (t.slice(i - size, i) ++ t.slice(i + 1, i + size + 1)).map(_.lemme.toLowerCase).foreach { x =>
             if (inversedMap.contains(x)) {
               if (!inversedMap(x).contains(te))
                 inversedMap(x) ++= List(te)
@@ -96,7 +96,7 @@ object ContextVector {
           val c = inversedMap.getOrElse(kk, List()).filterNot(_.equalsIgnoreCase(k)).map { x => myMap.getOrElse(x, mutable.Map()).map(_._2).sum }.sum
           val d = wStar - a - b - c
           //println("a: " + a +" | b: " + b + " | c: " + c + " | d: " + d + "\n\n")
-          normalized(k) += (kk -> scala.math.log(((a + 0.5) * (d + 0.5)) / ((b + 0.5) * (c + 0.5))))
+          normalized(k) += (kk -> ((a + 0.5) * (d + 0.5)) / ((b + 0.5) * (c + 0.5)))
         }
       }
     }
