@@ -36,7 +36,9 @@ object ContextVector {
     vectors.groupBy(_.word).map { case (k, v) => (k, v.flatMap(_.context)) }*/
 
   def build(terms: List[List[Term]], size: Int): mutable.Map[String, mutable.Map[String, Double]] = {
+    // map of context for each keys k
     var myMap = mutable.Map[String, mutable.Map[String, Double]]()
+    // give us all the ki which have K in their context
     var inversedMap = mutable.Map[String, List[String]]()
 
     terms.foreach { t =>
@@ -76,29 +78,28 @@ object ContextVector {
       }
     }
 
-    val wStar = myMap.keys.toList.length
+    // all cooc
+    val wStar = myMap.map { case (k, v) =>
+      v.map(_._2).sum
+    }.sum
     println("Normalisation...")
     myMap.foreach { case (k, v) =>
-      val a = v.keys.toList.length
-      val b = wStar - a
-      val c = inversedMap.map { case (s, ls) =>
-        if (!ls.contains(k))
-          1.0
-        else
-          0.0
-      }.sum
-      val d = inversedMap.map { case (s, ls) =>
-        if (ls.length == 1 && ls.head.equalsIgnoreCase(k))
-          1.0
-        else
-          0.0
-      }.sum
-
+      val sumVect = v.map(_._2).sum
       v.foreach { case (kk, vv) =>
         if (vv == 1.0)
           v -= kk
         else {
-          myMap(k)(kk) /= scala.math.abs(scala.math.log(((a + 0.5) * (d + 0.5)) / ((b + 0.5) * (c + 0.5))))
+          // c(i,j) = size of the context of i
+          val a = vv
+          // c(i, -j) = all words minus ones in i
+          val b = sumVect - a
+          // c(-i, j) = j in context of -i
+          val c = inversedMap(kk).filterNot(_.equalsIgnoreCase(k)).map { x =>
+            myMap(x).map(_._2).sum
+          }.sum
+          // c(-i,-j) = only in context of i
+          val d = wStar - a - b - c
+          myMap(k)(kk) = scala.math.abs(scala.math.log(((a + 0.5) * (d + 0.5)) / ((b + 0.5) * (c + 0.5))))
         }
       }
       if (v.isEmpty)

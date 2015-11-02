@@ -16,7 +16,7 @@ object StandardMethod {
     (ContextVector.toMap(ContextVector.addFrequencies(sourcesTerms.map(ContextVector.build(_, 3)).flatten)),
       ContextVector.toMap(ContextVector.addFrequencies(targetTerms.map(ContextVector.build(_, 3)).flatten)))*/
 
-  //@todo inversed file
+
   /*def inversedFile(context: Map[String, List[(String, Double)]]): Map[String, List[String]] = {
     context.flatMap { case (k, v) =>
       v.map { case (s, d) =>

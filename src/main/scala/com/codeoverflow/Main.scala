@@ -118,7 +118,7 @@ object Main {
     var done = List[String]()
     val accuracy = Timer.executionTime {
       listOfCandidates.flatMap { case (key, value) =>
-        value.map { case (s, d) =>
+        value /*.slice(0,10)*/ .map { case (s, d) =>
           if (!done.contains(key) && specializedDict(key).exists(_.equalsIgnoreCase(s))) {
             println(key + " <==" + specializedDict(key).find(_.equalsIgnoreCase(s)) + "==> " + s)
             done = key :: done
