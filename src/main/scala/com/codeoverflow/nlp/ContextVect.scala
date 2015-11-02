@@ -1,5 +1,6 @@
 package com.codeoverflow.nlp
 
+import com.codeoverflow.helpers.FileWriter
 import com.codeoverflow.models.Term
 
 import scala.collection.mutable
@@ -15,6 +16,7 @@ import scala.collection.mutable
 
 
 case class ContextVector(word: String, context: List[String])
+
 case class ContextVectorFrequency(word: String, context: List[(String, Double)])
 
 object ContextVector {
@@ -41,42 +43,25 @@ object ContextVector {
 
     terms.foreach(_.foreach { t =>
       val lemmeList = t.map(_.lemme.toLowerCase)
+      FileWriter.write("testCourCount.txt", lemmeList.zipWithIndex.toString().replace("),", "),\n"))
       lemmeList.zipWithIndex.foreach { case (te, i) =>
-        if (myMap.contains(te)) {
-          (t.slice(i - size, i) ++ t.slice(i + 1, i + size + 1)).map(_.lemme.toLowerCase).foreach { x =>
-            if (inversedMap.contains(x)) {
-              if (!inversedMap(x).contains(te))
-                inversedMap(x) ++= List(te)
-            }
-            else {
-              inversedMap += (x -> List(te))
-            }
-            if (myMap(te).contains(x))
-              myMap(te)(x) += 1.0
-            else
-              myMap(te) += (x -> 1.0)
-          }
+        println(te + " -> " + (lemmeList.slice(i - size, i) ++ lemmeList.slice(i + 1, i + size + 1)))
+        if (!myMap.contains(te)) {
+          myMap += (te -> mutable.Map[String, Double]())
         }
-        else {
-          (t.slice(i - size, i) ++ t.slice(i + 1, i + size + 1)).map(_.lemme.toLowerCase).foreach { x =>
-            if (inversedMap.contains(x)) {
-              if (!inversedMap(x).contains(te))
-                inversedMap(x) ++= List(te)
-            }
-            else {
-              inversedMap += (x -> List(te))
-            }
-            myMap += (te -> mutable.Map[String, Double]())
-            if (myMap(te).contains(x))
-              myMap(te)(x) += 1.0
-            else
-              myMap(te) += (x -> 1.0)
-          }
+        (lemmeList.slice(i - size, i) ++ lemmeList.slice(i + 1, i + size + 1)).foreach { x =>
+          if (myMap(te).contains(x))
+            myMap(te)(x) += 1.0
+          else
+            myMap(te) += (x -> 1.0)
         }
       }
     })
 
+    println(myMap)
+
     println("Normalisation...")
+    /*var toDelete = List[(String, String)]()
     var normalized = mutable.Map[String, mutable.Map[String, Double]]()
     myMap.keys.toList.foreach { case s => normalized += (s -> mutable.Map[String, Double]()) }
     // all cooc
@@ -85,25 +70,32 @@ object ContextVector {
     }.sum
     myMap.foreach { case (k, v) =>
       v.foreach { case (kk, vv) =>
-        if (vv == 1.0)
-          v -= kk
-        else {
-          val a = vv
-          val sumVect = v.map(_._2).sum
-          //println("v = " + v)
-          //println("sumVect: " + sumVect)
-          val b = sumVect - a
-          val c = inversedMap.getOrElse(kk, List()).filterNot(_.equalsIgnoreCase(k)).map { x => myMap.getOrElse(x, mutable.Map()).map(_._2).sum }.sum
-          val d = wStar - a - b - c
-          //println("a: " + a +" | b: " + b + " | c: " + c + " | d: " + d + "\n\n")
-          normalized(k) += (kk -> ((a + 0.5) * (d + 0.5)) / ((b + 0.5) * (c + 0.5)))
+        if (vv == 1.0) {
+          toDelete = (k, kk) :: toDelete
         }
+        /*
+        val a = vv
+        val sumVect = v.map(_._2).sum
+        //println("v = " + v)
+        //println("sumVect: " + sumVect)
+        val b = sumVect - a
+        val c = inversedMap.getOrElse(kk, List()).filterNot(_.equalsIgnoreCase(k)).map { x => myMap.getOrElse(x, mutable.Map())(kk) }.sum
+        val d = wStar - a - b - c
+        //println("a: " + a +" | b: " + b + " | c: " + c + " | d: " + d + "\n\n")
+        normalized(k) += (kk -> scala.math.log(((a + 0.5) * (d + 0.5)) / ((b + 0.5) * (c + 0.5))))
+        */
       }
-    }
+    }*/
 
+    println("Remove apaxes...")
+    /*toDelete.foreach { case (k, kk) =>
+      myMap(k) -= kk
+    }*/
     println("Remove empty...")
-    normalized = normalized.filterNot(_._2.isEmpty)
-
-    normalized
+    //normalized = normalized.filterNot(_._2.isEmpty)
+    myMap = myMap.filterNot(_._2.isEmpty)
+    println("Done.\n\n")
+    //normalized
+    myMap
   }
 }
