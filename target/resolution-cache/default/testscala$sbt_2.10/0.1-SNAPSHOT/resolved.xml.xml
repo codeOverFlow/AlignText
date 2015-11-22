@@ -4,7 +4,7 @@
 		module="testscala$sbt_2.10"
 		revision="0.1-SNAPSHOT"
 		status="integration"
-		publication="20151016164450"
+		publication="20151102191906"
 	/>
 	<configurations>
 		<conf name="default" visibility="public"/>

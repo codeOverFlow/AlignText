@@ -5,6 +5,9 @@ import java.io._
 import com.codeoverflow.helpers.{FileWriter, _}
 import com.codeoverflow.nlp._
 
+import scala.collection.mutable
+
+
 /**
  * Author: codeoverflow
  * Date: 03/10/15
@@ -15,23 +18,18 @@ object Main {
   lazy val specializedDict = XMLTools.loadXML("ts.xml")
 
   def main(args: Array[String]) {
-    /*val sourceTermsFile = new File("corpus/termer_source/corpus.lem")
-    val targetTermsFile = new File("corpus/termer_target/corpus.lem")*/
-    val test = new File("testFrase2.txt")
-    val lines = TermsExtractor.rawTermerFileToHandyStruct(test)
-    val p = lines.map(ft => Preprocessing.applyToFileTermer(ft.terms))
-    val c = ContextVector.build(p, 3)
-
-    FileWriter.write("testCourPre2.txt", p.toString().replace("),", "),\n"))
-    FileWriter.write("testCour2.txt", c.toString().replace("),", "),\n"))
+    val sourceTermsFile = new File("corpus/termer_source/corpus.lem")
+    val targetTermsFile = new File("corpus/termer_target/corpus.lem")
 
     // From unstructured to structured data
     println("Structuring raw data...")
 
-    /*val sources = Timer.executionTime { TermsExtractor.rawTermerFileToHandyStruct(sourceTermsFile) }
+    val sources = Timer.executionTime {
+      TermsExtractor.rawTermerFileToHandyStruct(sourceTermsFile)
+    }
     val targets = Timer.executionTime { TermsExtractor.rawTermerFileToHandyStruct(targetTermsFile) }
 
-    FileWriter.write("sources.txt", sources.head.toString.replace(")),", ")),\n"))*/
+    FileWriter.write("sources.txt", sources.head.toString.replace(")),", ")),\n"))
 
     println("Done.\n")
 
@@ -39,7 +37,7 @@ object Main {
     // And here goes pre-processing!
     println("Pre-processing...")
 
-    /*val sourcesTerms = Timer.executionTime {
+    val sourcesTerms = Timer.executionTime {
       sources.map( ft => Preprocessing.applyToFileTermer(ft.terms))
     }
     FileWriter.write("sources_pre.txt", sourcesTerms.head.toString().replace(")),", ")),\n"))
@@ -54,7 +52,7 @@ object Main {
       Preprocessing(targets)
     }
 
-    println("Done.\n")*/
+    println("Done.\n")
 
     /*val trgOccurences = StandardMethod.countOccurences(targetTerms.flatten.flatten, Source.fromFile(targetTermsFile).getLines().mkString(" ").toLowerCase)
     FileWriter.write("test_occurences.txt", trgOccurences.toString().replace(",", ",\n"))
@@ -63,9 +61,9 @@ object Main {
     ocOut.writeObject(trgOccurences)
     ocOut.close()*/
 
-    /*println("Read it from files...")
+    println("Read it from files...")
     val ocOut = new ObjectInputStream(new FileInputStream("trg_occ_save"))
-    val trgOccurences = ocOut.readObject().asInstanceOf[Map[String, Double]]*/
+    val trgOccurences = ocOut.readObject().asInstanceOf[Map[String, Double]]
 
 
 
@@ -89,9 +87,9 @@ object Main {
       (ContextVector.build(sourcesTerms, 3), ContextVector.build(targetTerms, 3))
     }
 
-    println("Done.")*/
+    println("Done.")
 
-    /*println("\nSize map: " + srcMapContext.keys.toList.length)
+    println("\nSize map: " + srcMapContext.keys.toList.length)
     println("Context cancer: " + srcMapContext("cancer").keys.toList.length)
     println("Done.\n")
 
@@ -108,17 +106,17 @@ object Main {
 
 
 
-    /*println("Read them from files...")
+    println("Read them from files...")
     val srcOis = new ObjectInputStream(new FileInputStream("src_save"))
     val trgOis = new ObjectInputStream(new FileInputStream("trg_save"))
     val (srcMapContext, trgMapContext) = (srcOis.readObject().asInstanceOf[mutable.Map[String, mutable.Map[String, Double]]],
       trgOis.readObject().asInstanceOf[mutable.Map[String, mutable.Map[String, Double]]])
     srcOis.close()
-    trgOis.close()*/
+    trgOis.close()
 
 
-    /*println("Traduction du vecteur...")
-    val reversedCognateDict = dictCognates.map { case (k, v) =>
+    println("Traduction du vecteur...")
+    /*val reversedCognateDict = dictCognates.map { case (k, v) =>
       v.map { s => (s, k) }
     }.toList.flatten.groupBy(_._1).map { case (k, v) => (k, v.map(_._2)) }
 
@@ -126,7 +124,7 @@ object Main {
     FileWriter.write("dictCo2.txt", reversedCognateDict.toString().replace("),", "),\n"))
 
     val srcTradMapContext = Timer.executionTime {
-      StandardMethod.trad(srcMapContext, dict, dictCognates, reversedCognateDict, Map[String, Double]()/*trgOccurences*/)
+      StandardMethod.trad(srcMapContext, dict, dictCognates, reversedCognateDict, trgOccurences)
     }
 
     FileWriter.write("context_trad_fr.txt", srcTradMapContext.toString().replace(")),", ")),\n"))
@@ -138,13 +136,12 @@ object Main {
     println("Serialize it in files...")
     val srcOos2 = new ObjectOutputStream(new FileOutputStream("src_trad_save"))
     srcOos2.writeObject(srcTradMapContext)
-    srcOos2.close()
+    srcOos2.close()*/
 
 
-    /*println("Read it from files...")
+    println("Read it from files...")
     val srcOis2 = new ObjectInputStream(new FileInputStream("src_trad_save"))
-    val srcTradMapContext = srcOis2.readObject().asInstanceOf[mutable.Map[String, List[(String, Double)]]]*/
-
+    var srcTradMapContext = srcOis2.readObject().asInstanceOf[mutable.Map[String, List[(String, Double)]]]
 
     println("\nReduction aux mot a traduire...")
     val filteredContext = Timer.executionTime {
@@ -177,6 +174,6 @@ object Main {
       }.sum
     }
 
-    println("\nPrecision: " + accuracy)*/
+    println("\nPrecision: " + accuracy)
   }
 }

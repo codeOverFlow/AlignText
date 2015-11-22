@@ -35,11 +35,9 @@ object StandardMethod {
     //val enTxt = Source.fromFile(new File("corpus/termer_target/corpus.lem")).getLines().mkString(" ")
     context.map { case (k, v) =>
       (k, v.filter(sd => dict.contains(sd._1) || cognates.contains(sd._1) || reversedCognates.contains(sd._1)).flatMap { case (s, d) =>
-        //println("d = " + d)
-        (dict.getOrElse(s.toLowerCase, List[String]()) ++ cognates.getOrElse(s.toLowerCase, List[String]()) ++ reversedCognates.getOrElse(s.toLowerCase, List[String]())).map { str =>
-          (str.toLowerCase,
-            (d / (dict.getOrElse(s.toLowerCase, List[String]()) ++ cognates.getOrElse(s.toLowerCase, List[String]()) ++ reversedCognates.getOrElse(s.toLowerCase, List[String]())).length.toDouble) *
-              occurences.getOrElse(str.toLowerCase, 0.0))
+        val sli = dict.getOrElse(s.toLowerCase, List[String]()) ++ cognates.getOrElse(s.toLowerCase, List[String]()) ++ reversedCognates.getOrElse(s.toLowerCase, List[String]())
+        sli.map { str =>
+          (str.toLowerCase, d * occurences.getOrElse(str.toLowerCase, 0.0) / scala.math.max(sli.map(occurences.getOrElse(_, 0.0)).sum, 1.0))
         }
       }.toList.filterNot { case (s, d) => d == 0.0 })
     }.filter { case (s, l) => l.nonEmpty }
@@ -49,25 +47,27 @@ object StandardMethod {
   def lookForCandidates(context: mutable.Map[String, List[(String, Double)]],
                         context_en: mutable.Map[String, List[(String, Double)]]): Map[String, List[(String, Double)]] =
     context.map { case (k, v) =>
-      CandidateVector(k, context_en.map { case (kk, vv) =>
+      CandidateVector(k, context_en..map { case (kk, vv) =>
         var downLeft = 0.0
         var downRight = 0.0
         val up = v.flatMap { case (s, d) =>
           vv.map { case (ss, dd) =>
-            if (s.equalsIgnoreCase(ss))
+            if (s.equalsIgnoreCase(ss)) {
               d * dd
-            else
+            }
+            else {
               0.0
+            }
           }
         }.sum
-        for (i <- 0 to v.length - 1) {
-          downRight += v(i)._2
+        for (i <- v.indices) {
+          downRight += scala.math.pow(v(i)._2, 2)
         }
-        downRight = scala.math.sqrt(scala.math.pow(downRight, 2))
-        for (i <- 0 to vv.length - 1) {
-          downLeft += vv(i)._2
+        downRight = scala.math.sqrt(downRight)
+        for (i <- vv.indices) {
+          downLeft += scala.math.pow(vv(i)._2, 2)
         }
-        downLeft = scala.math.sqrt(scala.math.pow(downLeft, 2))
+        downLeft = scala.math.sqrt(downLeft)
         (kk, up / (downLeft * downRight))
       }.toList)
     }.toList.groupBy(_.word).map { case (k, v) => (k, v.flatMap { c =>
